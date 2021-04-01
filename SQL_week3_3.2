@@ -1,0 +1,70 @@
+3.2 
+
+DROP TABLE IF EXISTS People10M;
+CREATE TABLE People10M
+USING parquet
+OPTIONS (
+path "/mnt/training/dataframes/people-10m.parquet",
+header "true");
+
+SELECT
+  firstName,
+  middleName,
+  lastName,
+  birthDate
+FROM
+  People10M
+WHERE
+  year(birthDate) > 1990
+  AND gender = 'F';
+  
+SELECT
+  firstName,
+  lastName,
+  salary,
+  salary * 0.2 AS savings
+FROM
+  People10M;
+  
+  
+
+CREATE OR REPLACE TEMPORARY VIEW PeopleSavings AS
+SELECT
+  firstName,
+  lastName,
+  year(birthDate) as birthYear,
+  salary,
+  salary * 0.2 AS savings
+FROM
+  People10M;
+  
+SELECT
+  birthYear,
+  ROUND(AVG(salary), 2) AS avgSalary
+FROM
+  peopleSavings
+GROUP BY
+  birthYear
+ORDER BY
+  avgSalary DESC;
+  
+DROP TABLE IF EXISTS ssaNames;
+CREATE TABLE ssaNames USING parquet OPTIONS (
+  path "/mnt/training/ssn/names.parquet",
+  header "true"
+);
+
+
+CREATE OR REPLACE TEMPORARY VIEW SSADistinctNames AS 
+  SELECT DISTINCT firstName AS ssaFirstName 
+  FROM SSANames;
+
+CREATE OR REPLACE TEMPORARY VIEW PeopleDistinctNames AS 
+  SELECT DISTINCT firstName 
+  FROM People10M;
+  
+SELECT count(*) 
+FROM PeopleDistinctNames 
+JOIN SSADistinctNames ON firstName = ssaFirstName;
+  
+  
